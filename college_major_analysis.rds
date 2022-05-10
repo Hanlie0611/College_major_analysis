@@ -1,0 +1,123 @@
+
+---
+Title: College Major Analysis
+Author: H.Smit
+Date: 22/10/2021
+Output: html_document
+---
+
+
+```  {r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Get the data
+
+```  {r get}
+
+library(dplyr)
+library(ggplot2)
+library(collegeIncome)
+data(college)
+
+
+library(matahari)
+
+```
+
+### Overview of Data
+
+```  {r overview}
+head(college)
+
+
+## Load libraries
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+
+# Make data table smaller
+
+ 
+df = subset(college, select = -c(rank,major_code,major,perc_women,perc_men,perc_employed_fulltime,perc_employed_parttime                                ,perc_employed_fulltime_yearround,perc_college_jobs,perc_non_college_jobs,
+                                perc_low_wage_jobs))
+
+```
+
+### Data analysis
+
+```  {r plot}
+
+## Displays boxplot amount of people in a major category
+
+box_plot <- ggplot(df,aes(x= total, y= major_category))
+box_plot + geom_boxplot() + scale_x_continuous(labels = label_number())
+
+## Displays boxplot of samples size per major category
+
+box_plot2 <- ggplot(df,aes(x= sample_size, y= major_category))
+box_plot2 + geom_boxplot() + scale_x_continuous(labels = label_number())
+
+## Displays boxplot of % employed vs employed by major category
+
+box_plot3 <- ggplot(df,aes(x= perc_employed, y= major_category))
+box_plot3 + geom_boxplot() + scale_x_continuous(labels = label_number())
+
+## Display boxplot of % unemployed by category
+box_plot4 <- ggplot(df,aes(x= perc_unemployed, y= major_category))
+
+box_plot4 + geom_boxplot() + scale_x_continuous(labels = label_number())
+
+```
+
+
+It can be seen that the % employement and % unemployment is evenly distributed between Major categories and also independant from the major
+
+```  {r output}
+
+## show income per major category
+
+major_cat <- rep(df$major_category,time=3)
+income_cat <- rep(c("median","p25th","p75th"), each = length(df$major_category))
+income <- c(df$median,df$p25th,df$p75th)
+df2 <- data.frame(cbind(major_cat,income_cat,income))
+df2[,3] <- as.numeric(df2[,3])
+g <- ggplot(df2, aes(income, major_cat))
+g + geom_boxplot() + facet_grid(income_cat~.)
+
+
+```
+
+The distribution for each major category for the p25th, median and p75th income can be seen in the boxplot. The distribution of each quantiles per major category do not show any trend, suggesting that the income is independent of the major.
+
+
+```   {r modelling1}
+
+
+## Regression model where median as outcome and major category as factor
+
+fit <- lm(median ~ major_category,df)
+round(summary(fit)$coef,3)
+par(mfrow = c(2,2))
+plot(fit)
+anova(fit)
+```
+
+The anova fail to find any significant difference in the mean income
+
+```   {r modelling2}
+# regression model where Business median income is compared to the rest
+
+major_cat2 <- relevel(as.factor(df$major_category),"Business")
+fit2 <- lm(median ~ major_cat2, df)
+summary(fit2)
+
+
+```
+
+Comparing the Business to the other categories, there is a significance difference when compared to arts, Computers & Mathematics, Education, Engineering, Humanities & Liberal arts and Social Science
+
+### Conclusion
+
+The basic analysis shows that there is no difference in income when holding a specific major.  However, when orientating ther analysis to the higher income a difference between some majors can be observed.  There is a significance between Business and some of the other majors as stated above.
